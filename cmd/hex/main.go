@@ -6,14 +6,17 @@ import (
 	"hex/internal/adapters/persistence"
 	"hex/internal/application/services"
 
+	"hex/internal/adapters/auth"
+
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	config.InitDB()
 
+	authService := auth.NewRailsAuthService("http://localhost:3000")
 	bookRepo := persistence.NewBookRepository(config.DB)
-	bookService := services.NewBookService(*bookRepo)
+	bookService := services.NewBookService(*bookRepo, authService)
 	bookHandler := handlers.NewBookHandler(bookService)
 
 	borrowingRepo := persistence.NewBorrowingRepository(config.DB)

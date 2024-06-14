@@ -38,7 +38,8 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 		Availability: body.Availability,
 	}
 
-	if err := h.service.CreateBook(&book, body.PublicationDate); err != nil {
+	token := c.GetHeader("Authorization")
+	if err := h.service.CreateBook(&book, body.PublicationDate, token); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -47,7 +48,8 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 }
 
 func (h *BookHandler) ViewAllBooks(c *gin.Context) {
-	books, err := h.service.ViewAllBooks()
+	token := c.GetHeader("Authorization")
+	books, err := h.service.ViewAllBooks(token)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -87,7 +89,8 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 	existingBook.Genre = body.Genre
 	existingBook.Availability = body.Availability
 
-	if err := h.service.UpdateBook(existingBook, body.PublicationDate); err != nil {
+	token := c.GetHeader("Authorization")
+	if err := h.service.UpdateBook(existingBook, body.PublicationDate, token); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -115,7 +118,8 @@ func (h *BookHandler) DeleteBook(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteBook(strconv.FormatUint(uint64(id), 10)); err != nil {
+	token := c.GetHeader("Authorization")
+	if err := h.service.DeleteBook(strconv.FormatUint(uint64(id), 10), token); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
