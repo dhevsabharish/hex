@@ -22,8 +22,8 @@ func main() {
 	borrowingRepo := persistence.NewBorrowingRepository(cfg.DB)
 
 	// Initialize services
-	bookService := services.NewBookService(*bookRepo, authService)
-	borrowingService := services.NewBorrowingService(*bookRepo, *borrowingRepo)
+	bookService := services.NewBookService(*bookRepo, authService, cfg.Logger)
+	borrowingService := services.NewBorrowingService(*bookRepo, *borrowingRepo, cfg.Logger)
 
 	// Initialize handlers
 	bookHandler := handlers.NewBookHandler(bookService)

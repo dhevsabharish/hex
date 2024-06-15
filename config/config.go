@@ -1,10 +1,10 @@
 package config
 
 import (
+	"hex/internal/adapters/logging"
+	"hex/pkg/models"
 	"log"
 	"os"
-
-	"hex/pkg/models"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -12,9 +12,10 @@ import (
 )
 
 type Config struct {
-	DB           *gorm.DB
-	Port         string
-	RailsAPIURL  string
+	DB          *gorm.DB
+	Port        string
+	RailsAPIURL string
+	Logger      *logging.MongoDBLogger
 }
 
 func NewConfig() *Config {
@@ -31,9 +32,12 @@ func NewConfig() *Config {
 
 	db.AutoMigrate(&models.Book{}, &models.BorrowingRecord{})
 
+	logger := logging.NewMongoDBLogger(os.Getenv("MONGODB_URI"), os.Getenv("MONGODB_DB"), os.Getenv("MONGODB_COLLECTION"))
+
 	return &Config{
-		DB:           db,
-		Port:         os.Getenv("PORT"),
-		RailsAPIURL:  os.Getenv("RAILS_API_URL"),
+		DB:          db,
+		Port:        os.Getenv("PORT"),
+		RailsAPIURL: os.Getenv("RAILS_API_URL"),
+		Logger:      logger,
 	}
 }
