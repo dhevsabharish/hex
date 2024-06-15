@@ -22,11 +22,11 @@ func main() {
 	borrowingRepo := persistence.NewBorrowingRepository(cfg.DB)
 
 	// Initialize services
-	bookService := services.NewBookService(*bookRepo, authService, cfg.Logger)
+	bookService := services.NewBookService(*bookRepo, cfg.Logger)
 	borrowingService := services.NewBorrowingService(*bookRepo, *borrowingRepo, cfg.Logger)
 
 	// Initialize handlers
-	bookHandler := handlers.NewBookHandler(bookService)
+	bookHandler := handlers.NewBookHandler(bookService, authService)
 	borrowingHandler := handlers.NewBorrowingHandler(borrowingService, authService)
 
 	// Setup Gin router

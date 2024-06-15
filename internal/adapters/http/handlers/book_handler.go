@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"hex/internal/application/auth"
 	"hex/internal/application/services"
 	"hex/pkg/models"
 	"net/http"
@@ -10,11 +11,12 @@ import (
 )
 
 type BookHandler struct {
-	service *services.BookService
+	service     *services.BookService
+	authService auth.AuthService
 }
 
-func NewBookHandler(service *services.BookService) *BookHandler {
-	return &BookHandler{service: service}
+func NewBookHandler(service *services.BookService, authService auth.AuthService) *BookHandler {
+	return &BookHandler{service: service, authService: authService}
 }
 
 func (h *BookHandler) CreateBook(c *gin.Context) {
@@ -39,7 +41,18 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 	}
 
 	token := c.GetHeader("Authorization")
-	if err := h.service.CreateBook(&book, body.PublicationDate, token); err != nil {
+	_, role, err := h.authService.Authenticate(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	if role != "admin" && role != "librarian" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only admins and librarians can create books"})
+		return
+	}
+
+	if err := h.service.CreateBook(&book, body.PublicationDate); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -49,7 +62,13 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 
 func (h *BookHandler) ViewAllBooks(c *gin.Context) {
 	token := c.GetHeader("Authorization")
-	books, err := h.service.ViewAllBooks(token)
+	_, _, err := h.authService.Authenticate(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	books, err := h.service.ViewAllBooks()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -90,7 +109,18 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 	existingBook.Availability = body.Availability
 
 	token := c.GetHeader("Authorization")
-	if err := h.service.UpdateBook(existingBook, body.PublicationDate, token); err != nil {
+	_, role, err := h.authService.Authenticate(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	if role != "admin" && role != "librarian" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only admins and librarians can update books"})
+		return
+	}
+
+	if err := h.service.UpdateBook(existingBook, body.PublicationDate); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -119,7 +149,18 @@ func (h *BookHandler) DeleteBook(c *gin.Context) {
 	}
 
 	token := c.GetHeader("Authorization")
-	if err := h.service.DeleteBook(strconv.FormatUint(uint64(id), 10), token); err != nil {
+	_, role, err := h.authService.Authenticate(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	if role != "admin" && role != "librarian" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only admins and librarians can delete books"})
+		return
+	}
+
+	if err := h.service.DeleteBook(strconv.FormatUint(uint64(id), 10)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
