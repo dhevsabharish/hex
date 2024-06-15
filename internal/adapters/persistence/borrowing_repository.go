@@ -20,7 +20,7 @@ func (r *BorrowingRepository) Create(borrowingRecord *models.BorrowingRecord) er
 
 func (r *BorrowingRepository) GetByID(id uint) (*models.BorrowingRecord, error) {
 	var borrowingRecord models.BorrowingRecord
-	err := r.DB.First(&borrowingRecord, id).Error
+	err := r.DB.Preload("Book").First(&borrowingRecord, id).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
@@ -32,13 +32,13 @@ func (r *BorrowingRepository) GetByID(id uint) (*models.BorrowingRecord, error) 
 
 func (r *BorrowingRepository) GetByMemberID(memberID uint) ([]models.BorrowingRecord, error) {
 	var borrowingRecords []models.BorrowingRecord
-	err := r.DB.Where("member_id = ?", memberID).Find(&borrowingRecords).Error
+	err := r.DB.Where("member_id = ?", memberID).Preload("Book").Find(&borrowingRecords).Error
 	return borrowingRecords, err
 }
 
 func (r *BorrowingRepository) GetAll() ([]models.BorrowingRecord, error) {
 	var borrowingRecords []models.BorrowingRecord
-	err := r.DB.Find(&borrowingRecords).Error
+	err := r.DB.Preload("Book").Find(&borrowingRecords).Error
 	return borrowingRecords, err
 }
 
