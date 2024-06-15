@@ -20,8 +20,8 @@ func main() {
 	bookHandler := handlers.NewBookHandler(bookService)
 
 	borrowingRepo := persistence.NewBorrowingRepository(config.DB)
-	borrowingService := services.NewBorrowingService(*borrowingRepo)
-	borrowingHandler := handlers.NewBorrowingHandler(borrowingService)
+	borrowingService := services.NewBorrowingService(*bookRepo, *borrowingRepo, authService)
+	borrowingHandler := handlers.NewBorrowingHandler(borrowingService, authService)
 
 	r := gin.Default()
 
@@ -30,9 +30,10 @@ func main() {
 	r.PUT("/books/:id", bookHandler.UpdateBook)
 	r.DELETE("/books/:id", bookHandler.DeleteBook)
 
-	r.POST("/return/:id", borrowingHandler.ReturnBook)
-	r.GET("/records", borrowingHandler.ShowAllRecords)
-	r.GET("/records/user/:userID", borrowingHandler.ShowRecordsByUserID)
+	r.POST("/borrow", borrowingHandler.BorrowBook)
+	r.POST("/return", borrowingHandler.ReturnBook)
+	r.GET("/my-borrowings", borrowingHandler.GetMyBorrowings)
+	r.GET("/borrowing-records", borrowingHandler.GetAllBorrowingRecords)
 
 	r.Run(":8080")
 }

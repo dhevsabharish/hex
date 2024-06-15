@@ -7,28 +7,41 @@ import (
 )
 
 type BorrowingRepository struct {
-	db *gorm.DB
+	DB *gorm.DB
 }
 
 func NewBorrowingRepository(db *gorm.DB) *BorrowingRepository {
-	return &BorrowingRepository{db: db}
+	return &BorrowingRepository{DB: db}
 }
 
-func (r *BorrowingRepository) Borrow(record *models.BorrowingRecord) error {
-	return r.db.Create(record).Error
-}
-func (r *BorrowingRepository) Return(recordID string) error {
-	return r.db.Model(&models.BorrowingRecord{}).Where("id = ?", recordID).Update("returned", true).Error
+func (r *BorrowingRepository) Create(borrowingRecord *models.BorrowingRecord) error {
+	return r.DB.Create(borrowingRecord).Error
 }
 
-func (r *BorrowingRepository) GetAllRecords() ([]models.BorrowingRecord, error) {
-	var records []models.BorrowingRecord
-	err := r.db.Find(&records).Error
-	return records, err
+func (r *BorrowingRepository) GetByID(id uint) (*models.BorrowingRecord, error) {
+	var borrowingRecord models.BorrowingRecord
+	err := r.DB.First(&borrowingRecord, id).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &borrowingRecord, nil
 }
 
-func (r *BorrowingRepository) GetRecordsByUserID(userID string) ([]models.BorrowingRecord, error) {
-	var records []models.BorrowingRecord
-	err := r.db.Where("user_id = ?", userID).Find(&records).Error
-	return records, err
+func (r *BorrowingRepository) GetByMemberID(memberID uint) ([]models.BorrowingRecord, error) {
+	var borrowingRecords []models.BorrowingRecord
+	err := r.DB.Where("member_id = ?", memberID).Find(&borrowingRecords).Error
+	return borrowingRecords, err
+}
+
+func (r *BorrowingRepository) GetAll() ([]models.BorrowingRecord, error) {
+	var borrowingRecords []models.BorrowingRecord
+	err := r.DB.Find(&borrowingRecords).Error
+	return borrowingRecords, err
+}
+
+func (r *BorrowingRepository) Update(borrowingRecord *models.BorrowingRecord) error {
+	return r.DB.Save(borrowingRecord).Error
 }
