@@ -11,19 +11,29 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
+type Config struct {
+	DB           *gorm.DB
+	Port         string
+	RailsAPIURL  string
+}
 
-func InitDB() {
+func NewConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
 
 	dsn := os.Getenv("DB_USER") + ":" + os.Getenv("DB_PASSWORD") + "@tcp(127.0.0.1:3306)/" + os.Getenv("DB_NAME") + "?charset=utf8mb4&parseTime=True&loc=Local"
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
 	}
 
-	DB.AutoMigrate(&models.Book{}, &models.BorrowingRecord{})
+	db.AutoMigrate(&models.Book{}, &models.BorrowingRecord{})
+
+	return &Config{
+		DB:           db,
+		Port:         os.Getenv("PORT"),
+		RailsAPIURL:  os.Getenv("RAILS_API_URL"),
+	}
 }

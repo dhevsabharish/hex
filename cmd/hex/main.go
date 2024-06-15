@@ -2,24 +2,23 @@ package main
 
 import (
 	"hex/config"
+	"hex/internal/adapters/auth"
 	"hex/internal/adapters/http/handlers"
 	"hex/internal/adapters/persistence"
 	"hex/internal/application/services"
-
-	"hex/internal/adapters/auth"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	config.InitDB()
+	cfg := config.NewConfig()
 
-	authService := auth.NewRailsAuthService("http://localhost:3000")
-	bookRepo := persistence.NewBookRepository(config.DB)
+	authService := auth.NewRailsAuthService(cfg.RailsAPIURL)
+	bookRepo := persistence.NewBookRepository(cfg.DB)
 	bookService := services.NewBookService(*bookRepo, authService)
 	bookHandler := handlers.NewBookHandler(bookService)
 
-	borrowingRepo := persistence.NewBorrowingRepository(config.DB)
+	borrowingRepo := persistence.NewBorrowingRepository(cfg.DB)
 	borrowingService := services.NewBorrowingService(*bookRepo, *borrowingRepo)
 	borrowingHandler := handlers.NewBorrowingHandler(borrowingService, authService)
 
@@ -35,5 +34,5 @@ func main() {
 	r.GET("/my-borrowings", borrowingHandler.GetMyBorrowings)
 	r.GET("/borrowing-records", borrowingHandler.GetAllBorrowingRecords)
 
-	r.Run(":8080")
+	r.Run(":" + cfg.Port)
 }
