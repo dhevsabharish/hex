@@ -11,19 +11,28 @@ import (
 )
 
 func main() {
+	// Initialize the configuration
 	cfg := config.NewConfig()
 
+	// Initialize authentication service
 	authService := auth.NewRailsAuthService(cfg.RailsAPIURL)
-	bookRepo := persistence.NewBookRepository(cfg.DB)
-	bookService := services.NewBookService(*bookRepo, authService)
-	bookHandler := handlers.NewBookHandler(bookService)
 
+	// Initialize repositories
+	bookRepo := persistence.NewBookRepository(cfg.DB)
 	borrowingRepo := persistence.NewBorrowingRepository(cfg.DB)
+
+	// Initialize services
+	bookService := services.NewBookService(*bookRepo, authService)
 	borrowingService := services.NewBorrowingService(*bookRepo, *borrowingRepo)
+
+	// Initialize handlers
+	bookHandler := handlers.NewBookHandler(bookService)
 	borrowingHandler := handlers.NewBorrowingHandler(borrowingService, authService)
 
+	// Setup Gin router
 	r := gin.Default()
 
+	// Define routes
 	r.POST("/books", bookHandler.CreateBook)
 	r.GET("/books", bookHandler.ViewAllBooks)
 	r.PUT("/books/:id", bookHandler.UpdateBook)
@@ -34,5 +43,6 @@ func main() {
 	r.GET("/my-borrowings", borrowingHandler.GetMyBorrowings)
 	r.GET("/borrowing-records", borrowingHandler.GetAllBorrowingRecords)
 
+	// Run the server
 	r.Run(":" + cfg.Port)
 }
