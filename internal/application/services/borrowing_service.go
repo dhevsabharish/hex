@@ -3,42 +3,30 @@ package services
 import (
 	"fmt"
 	"hex/internal/adapters/persistence"
-	"hex/internal/application/auth"
 	"hex/pkg/models"
 	"time"
 )
 
 type BorrowingService interface {
-	BorrowBook(bookID uint, memberID uint, token string) error
-	ReturnBook(borrowingRecordID uint, memberID uint, token string) error
-	GetMyBorrowings(memberID uint, token string) ([]models.BorrowingRecord, error)
-	GetAllBorrowingRecords(token string) ([]models.BorrowingRecord, error)
+	BorrowBook(bookID uint, memberID uint) error
+	ReturnBook(borrowingRecordID uint, memberID uint) error
+	GetMyBorrowings(memberID uint) ([]models.BorrowingRecord, error)
+	GetAllBorrowingRecords() ([]models.BorrowingRecord, error)
 }
 
 type borrowingService struct {
 	bookRepo      persistence.BookRepository
 	borrowingRepo persistence.BorrowingRepository
-	authService   auth.AuthService
 }
 
-func NewBorrowingService(bookRepo persistence.BookRepository, borrowingRepo persistence.BorrowingRepository, authService auth.AuthService) BorrowingService {
+func NewBorrowingService(bookRepo persistence.BookRepository, borrowingRepo persistence.BorrowingRepository) BorrowingService {
 	return &borrowingService{
 		bookRepo:      bookRepo,
 		borrowingRepo: borrowingRepo,
-		authService:   authService,
 	}
 }
 
-func (s *borrowingService) BorrowBook(bookID uint, memberID uint, token string) error {
-	// Check if the user is a member
-	_, role, err := s.authService.Authenticate(token)
-	if err != nil {
-		return err
-	}
-	if role != "member" {
-		return fmt.Errorf("unauthorized: only members can borrow books")
-	}
-
+func (s *borrowingService) BorrowBook(bookID uint, memberID uint) error {
 	// Check if the book is available
 	book, err := s.bookRepo.GetByID(bookID)
 	if err != nil {
@@ -70,15 +58,7 @@ func (s *borrowingService) BorrowBook(bookID uint, memberID uint, token string) 
 	return nil
 }
 
-func (s *borrowingService) ReturnBook(borrowingRecordID uint, memberID uint, token string) error {
-	_, role, err := s.authService.Authenticate(token)
-	if err != nil {
-		return err
-	}
-	if role != "member" {
-		return fmt.Errorf("unauthorized: only members can return books")
-	}
-
+func (s *borrowingService) ReturnBook(borrowingRecordID uint, memberID uint) error {
 	borrowingRecord, err := s.borrowingRepo.GetByID(borrowingRecordID)
 	if err != nil {
 		return err
@@ -118,15 +98,7 @@ func (s *borrowingService) ReturnBook(borrowingRecordID uint, memberID uint, tok
 	return nil
 }
 
-func (s *borrowingService) GetMyBorrowings(memberID uint, token string) ([]models.BorrowingRecord, error) {
-	_, role, err := s.authService.Authenticate(token)
-	if err != nil {
-		return nil, err
-	}
-	if role != "member" {
-		return nil, fmt.Errorf("unauthorized: only members can view their borrowings")
-	}
-
+func (s *borrowingService) GetMyBorrowings(memberID uint) ([]models.BorrowingRecord, error) {
 	borrowingRecords, err := s.borrowingRepo.GetByMemberID(memberID)
 	if err != nil {
 		return nil, err
@@ -135,15 +107,7 @@ func (s *borrowingService) GetMyBorrowings(memberID uint, token string) ([]model
 	return borrowingRecords, nil
 }
 
-func (s *borrowingService) GetAllBorrowingRecords(token string) ([]models.BorrowingRecord, error) {
-	_, role, err := s.authService.Authenticate(token)
-	if err != nil {
-		return nil, err
-	}
-	if role != "admin" && role != "librarian" {
-		return nil, fmt.Errorf("unauthorized: only admins and librarians can view all borrowing records")
-	}
-
+func (s *borrowingService) GetAllBorrowingRecords() ([]models.BorrowingRecord, error) {
 	borrowingRecords, err := s.borrowingRepo.GetAll()
 	if err != nil {
 		return nil, err

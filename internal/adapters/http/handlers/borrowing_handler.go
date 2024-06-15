@@ -29,9 +29,14 @@ func (h *BorrowingHandler) BorrowBook(c *gin.Context) {
 		return
 	}
 
-	userID, _, err := h.authService.Authenticate(c.GetHeader("Authorization"))
+	userID, role, err := h.authService.Authenticate(c.GetHeader("Authorization"))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	if role != "member" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized: only members can borrow books"})
 		return
 	}
 
@@ -41,7 +46,7 @@ func (h *BorrowingHandler) BorrowBook(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.BorrowBook(body.BookID, uint(memberID), c.GetHeader("Authorization")); err != nil {
+	if err := h.service.BorrowBook(body.BookID, uint(memberID)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -59,9 +64,14 @@ func (h *BorrowingHandler) ReturnBook(c *gin.Context) {
 		return
 	}
 
-	userID, _, err := h.authService.Authenticate(c.GetHeader("Authorization"))
+	userID, role, err := h.authService.Authenticate(c.GetHeader("Authorization"))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	if role != "member" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized: only members can return books"})
 		return
 	}
 
@@ -71,7 +81,7 @@ func (h *BorrowingHandler) ReturnBook(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.ReturnBook(body.BorrowingRecordID, uint(memberID), c.GetHeader("Authorization")); err != nil {
+	if err := h.service.ReturnBook(body.BorrowingRecordID, uint(memberID)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -80,9 +90,14 @@ func (h *BorrowingHandler) ReturnBook(c *gin.Context) {
 }
 
 func (h *BorrowingHandler) GetMyBorrowings(c *gin.Context) {
-	userID, _, err := h.authService.Authenticate(c.GetHeader("Authorization"))
+	userID, role, err := h.authService.Authenticate(c.GetHeader("Authorization"))
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	if role != "member" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized: only members can view their borrowings"})
 		return
 	}
 
@@ -92,7 +107,7 @@ func (h *BorrowingHandler) GetMyBorrowings(c *gin.Context) {
 		return
 	}
 
-	borrowingRecords, err := h.service.GetMyBorrowings(uint(memberID), c.GetHeader("Authorization"))
+	borrowingRecords, err := h.service.GetMyBorrowings(uint(memberID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -102,7 +117,18 @@ func (h *BorrowingHandler) GetMyBorrowings(c *gin.Context) {
 }
 
 func (h *BorrowingHandler) GetAllBorrowingRecords(c *gin.Context) {
-	borrowingRecords, err := h.service.GetAllBorrowingRecords(c.GetHeader("Authorization"))
+	_, role, err := h.authService.Authenticate(c.GetHeader("Authorization"))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	if role != "admin" && role != "librarian" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized: only admins and librarians can view all borrowing records"})
+		return
+	}
+
+	borrowingRecords, err := h.service.GetAllBorrowingRecords()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

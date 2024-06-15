@@ -20,7 +20,7 @@ func main() {
 	bookHandler := handlers.NewBookHandler(bookService)
 
 	borrowingRepo := persistence.NewBorrowingRepository(config.DB)
-	borrowingService := services.NewBorrowingService(*bookRepo, *borrowingRepo, authService)
+	borrowingService := services.NewBorrowingService(*bookRepo, *borrowingRepo)
 	borrowingHandler := handlers.NewBorrowingHandler(borrowingService, authService)
 
 	r := gin.Default()
