@@ -3,6 +3,7 @@ package main
 import (
 	"hex/config"
 	"hex/internal/adapters/auth"
+	"hex/internal/adapters/cors"
 	"hex/internal/adapters/http/handlers"
 	"hex/internal/adapters/persistence"
 	"hex/internal/application/services"
@@ -31,6 +32,9 @@ func main() {
 
 	// Setup Gin router
 	r := gin.Default()
+
+	// Configure CORS
+	cors.ConfigureCORS(r)
 
 	// Define routes
 	r.POST("/books", bookHandler.CreateBook)
