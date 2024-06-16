@@ -92,6 +92,18 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 		return
 	}
 
+	token := c.GetHeader("Authorization")
+	_, role, err := h.authService.Authenticate(token)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	if role != "admin" && role != "librarian" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only admins and librarians can update books"})
+		return
+	}
+
 	existingBook, err := h.service.GetBookByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -107,18 +119,6 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 	existingBook.Author = body.Author
 	existingBook.Genre = body.Genre
 	existingBook.Availability = body.Availability
-
-	token := c.GetHeader("Authorization")
-	_, role, err := h.authService.Authenticate(token)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
-
-	if role != "admin" && role != "librarian" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only admins and librarians can update books"})
-		return
-	}
 
 	if err := h.service.UpdateBook(existingBook, body.PublicationDate); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -137,17 +137,6 @@ func (h *BookHandler) DeleteBook(c *gin.Context) {
 		return
 	}
 
-	book, err := h.service.GetBookByID(strconv.FormatUint(uint64(id), 10))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if book == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Book not found"})
-		return
-	}
-
 	token := c.GetHeader("Authorization")
 	_, role, err := h.authService.Authenticate(token)
 	if err != nil {
@@ -157,6 +146,17 @@ func (h *BookHandler) DeleteBook(c *gin.Context) {
 
 	if role != "admin" && role != "librarian" {
 		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: only admins and librarians can delete books"})
+		return
+	}
+
+	book, err := h.service.GetBookByID(strconv.FormatUint(uint64(id), 10))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if book == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Book not found"})
 		return
 	}
 
