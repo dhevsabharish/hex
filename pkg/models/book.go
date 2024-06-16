@@ -9,11 +9,11 @@ import (
 
 type Book struct {
 	gorm.Model
-	Title           string         `json:"title" gorm:"not null"`
-	Author          string         `json:"author" gorm:"not null"`
-	PublicationDate datatypes.Date `json:"publication_date" gorm:"type:date;not null"`
-	Genre           string         `json:"genre"`
-	Availability    uint           `json:"availability" gorm:"default:1"`
+	Title           string         `gorm:"not null"`
+	Author          string         `gorm:"not null"`
+	PublicationDate datatypes.Date `gorm:"type:date;not null"`
+	Genre           string
+	Availability    uint `gorm:"default:1"`
 }
 
 func (b *Book) BeforeCreate(tx *gorm.DB) error {

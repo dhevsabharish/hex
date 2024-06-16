@@ -73,7 +73,7 @@ func (h *BookHandler) ViewAllBooks(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, books)
+	c.JSON(http.StatusOK, gin.H{"books": books})
 }
 
 func (h *BookHandler) UpdateBook(c *gin.Context) {
