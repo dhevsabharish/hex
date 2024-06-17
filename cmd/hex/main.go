@@ -6,7 +6,9 @@ import (
 	"hex/internal/adapters/cors"
 	"hex/internal/adapters/http/handlers"
 	"hex/internal/adapters/persistence"
+	"hex/internal/adapters/seeder"
 	"hex/internal/application/services"
+	"log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +16,16 @@ import (
 func main() {
 	// Initialize the configuration
 	cfg := config.NewConfig()
+
+	// Run seeding if the environment variable is set to true
+	if cfg.SeedDatabase {
+		if err := seeder.Seed(cfg.DB); err != nil {
+			log.Fatalf("Error seeding database: %v", err)
+		}
+		log.Println("Database seeding completed.")
+	} else {
+		log.Println("Database seeding is disabled.")
+	}
 
 	// Initialize authentication service
 	authService := auth.NewRailsAuthService(cfg.RailsAPIURL)

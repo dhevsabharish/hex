@@ -5,6 +5,7 @@ import (
 	"hex/pkg/models"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
@@ -12,10 +13,11 @@ import (
 )
 
 type Config struct {
-	DB          *gorm.DB
-	Port        string
-	RailsAPIURL string
-	Logger      *logging.MongoDBLogger
+	DB           *gorm.DB
+	Port         string
+	RailsAPIURL  string
+	Logger       *logging.MongoDBLogger
+	SeedDatabase bool
 }
 
 func NewConfig() *Config {
@@ -34,10 +36,16 @@ func NewConfig() *Config {
 
 	logger := logging.NewMongoDBLogger(os.Getenv("MONGODB_URI"), os.Getenv("MONGODB_DB"), os.Getenv("MONGODB_COLLECTION"))
 
+	seedDatabase, err := strconv.ParseBool(os.Getenv("SEED_DATABASE"))
+	if err != nil {
+		seedDatabase = false
+	}
+
 	return &Config{
-		DB:          db,
-		Port:        os.Getenv("PORT"),
-		RailsAPIURL: os.Getenv("RAILS_API_URL"),
-		Logger:      logger,
+		DB:           db,
+		Port:         os.Getenv("PORT"),
+		RailsAPIURL:  os.Getenv("RAILS_API_URL"),
+		Logger:       logger,
+		SeedDatabase: seedDatabase,
 	}
 }
