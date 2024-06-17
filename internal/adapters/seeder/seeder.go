@@ -1,6 +1,7 @@
 package seeder
 
 import (
+	"fmt"
 	"hex/pkg/models"
 	"math/rand"
 	"time"
@@ -18,11 +19,11 @@ func Seed(db *gorm.DB) error {
 	books := make([]models.Book, 10)
 	for i := 0; i < 10; i++ {
 		books[i] = models.Book{
-			Title:           generateRandomTitle(),
-			Author:          generateRandomAuthor(),
+			Title:           "Book " + fmt.Sprint(i+1),
+			Author:          "Author " + fmt.Sprint(i+1),
 			PublicationDate: datatypes.Date(generateRandomPublicationDate()),
 			Genre:           generateRandomGenre(),
-			Availability:    1,
+			Availability:    10,
 		}
 	}
 	if err := db.Create(&books).Error; err != nil {
@@ -30,16 +31,6 @@ func Seed(db *gorm.DB) error {
 	}
 
 	return nil
-}
-
-func generateRandomTitle() string {
-	titles := []string{"Book 1", "Book 2", "Book 3", "Book 4", "Book 5"}
-	return titles[rand.Intn(len(titles))]
-}
-
-func generateRandomAuthor() string {
-	authors := []string{"Author 1", "Author 2", "Author 3", "Author 4", "Author 5"}
-	return authors[rand.Intn(len(authors))]
 }
 
 func generateRandomPublicationDate() time.Time {
