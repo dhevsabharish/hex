@@ -6,8 +6,10 @@ import (
 	"hex/pkg/models"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/datatypes"
 )
 
 type BookHandler struct {
@@ -33,11 +35,19 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 		return
 	}
 
+	layout := "2006-01-02"
+	parsedDate, err := time.Parse(layout, body.PublicationDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid publication date format"})
+		return
+	}
+
 	book := models.Book{
-		Title:        body.Title,
-		Author:       body.Author,
-		Genre:        body.Genre,
-		Availability: body.Availability,
+		Title:           body.Title,
+		Author:          body.Author,
+		PublicationDate: datatypes.Date(parsedDate),
+		Genre:           body.Genre,
+		Availability:    body.Availability,
 	}
 
 	token := c.GetHeader("Authorization")
@@ -52,7 +62,7 @@ func (h *BookHandler) CreateBook(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.CreateBook(&book, body.PublicationDate); err != nil {
+	if err := h.service.CreateBook(&book); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -120,7 +130,17 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 	existingBook.Genre = body.Genre
 	existingBook.Availability = body.Availability
 
-	if err := h.service.UpdateBook(existingBook, body.PublicationDate); err != nil {
+	if body.PublicationDate != "" {
+		layout := "2006-01-02"
+		parsedDate, err := time.Parse(layout, body.PublicationDate)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid publication date format"})
+			return
+		}
+		existingBook.PublicationDate = datatypes.Date(parsedDate)
+	}
+
+	if err := h.service.UpdateBook(existingBook); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -2,14 +2,11 @@ package services
 
 import (
 	"strconv"
-	"time"
 
 	"hex/internal/adapters/persistence"
 	"hex/pkg/models"
 
 	"hex/internal/adapters/logging"
-
-	"gorm.io/datatypes"
 )
 
 type BookService struct {
@@ -21,14 +18,7 @@ func NewBookService(repo persistence.BookRepository, logger *logging.MongoDBLogg
 	return &BookService{repo: repo, logger: logger}
 }
 
-func (s *BookService) CreateBook(book *models.Book, publicationDateStr string) error {
-	layout := "2006-01-02"
-	parsedDate, err := time.Parse(layout, publicationDateStr)
-	if err != nil {
-		s.logger.Log("ERROR", "Failed to parse publication date: "+err.Error())
-		return err
-	}
-	book.PublicationDate = datatypes.Date(parsedDate)
+func (s *BookService) CreateBook(book *models.Book) error {
 	if err := s.repo.Create(book); err != nil {
 		s.logger.Log("ERROR", "Failed to create book: "+err.Error())
 		return err
@@ -47,17 +37,7 @@ func (s *BookService) ViewAllBooks() ([]models.Book, error) {
 	return books, nil
 }
 
-func (s *BookService) UpdateBook(book *models.Book, publicationDateStr string) error {
-	if publicationDateStr != "" {
-		layout := "2006-01-02"
-		parsedDate, err := time.Parse(layout, publicationDateStr)
-		if err != nil {
-			s.logger.Log("ERROR", "Failed to parse publication date: "+err.Error())
-			return err
-		}
-		book.PublicationDate = datatypes.Date(parsedDate)
-	}
-
+func (s *BookService) UpdateBook(book *models.Book) error {
 	if err := s.repo.Update(book); err != nil {
 		s.logger.Log("ERROR", "Failed to update book: "+err.Error())
 		return err
