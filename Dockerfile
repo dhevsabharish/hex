@@ -1,5 +1,5 @@
 # Start from the official Go image
-FROM golang:latest
+FROM golang:alpine
 
 # Install bash and wget
 RUN apk add --no-cache bash wget
